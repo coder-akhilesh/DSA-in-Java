@@ -1,0 +1,46 @@
+name: Keep Java Only
+
+on:
+  push:
+    branches:
+      - main
+      - master
+
+permissions:
+  contents: write
+
+jobs:
+  clean:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Remove non-Java solution files
+        run: |
+          find . -type f \
+            ! -name "*.java" \
+            ! -name "README.md" \
+            ! -name ".gitignore" \
+            ! -path "./.git/*" \
+            ! -path "./.github/*" \
+            -delete
+
+      - name: Remove empty directories
+        run: |
+          find . -type d -empty -not -path "./.git*" -delete
+
+      - name: Commit changes
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+
+          git add .
+
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Keep only Java solutions"
+            git push
+          fi
